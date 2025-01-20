@@ -1,5 +1,4 @@
-# padel
-Padel Tournament App
+# Padel Tournament App
 A simple, mobile-friendly web application to organize and manage padel tournaments. Players can register, generate matches, record results, and view live standings and match history. The app is designed for ease of use, especially on mobile devices, and supports result editing.
 
 Features

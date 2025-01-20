@@ -72,24 +72,25 @@ h1 {
   color: white;
 }
 
-/* Slider-stil */
+/* Result Display Styling */
+.slider-result {
+  font-size: 28px; /* Større tekst for tydelighet */
+  font-weight: bold;
+  color: #34495e; /* Mørk farge for bedre kontrast */
+  margin-bottom: 15px; /* Mer plass mellom resultatet og slideren */
+}
+
+.slider-result .score {
+  color: #e74c3c; /* Fremheving for tallene */
+  font-size: 30px; /* Økt størrelse for synlighet */
+}
+
+/* Slider Styling */
 .slider-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-bottom: 20px;
-}
-
-.slider-result {
-  font-size: 24px;
-  font-weight: bold;
-  color: #2c3e50;
-  margin-top: 20px; /* Økt margin for bedre luft */
-  margin-bottom: 20px; /* Økt margin under resultatet */
-}
-
-.slider-result .score {
-  color: #e74c3c;
 }
 
 input[type="range"] {
@@ -100,8 +101,27 @@ input[type="range"] {
   outline: none;
   opacity: 0.8;
   border-radius: 5px;
-  margin-top: 20px; /* Økt margin rundt slideren */
+  margin-top: 10px; /* Avstand over slider */
 }
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #2c3e50;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #2c3e50;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;

@@ -33,7 +33,7 @@ function togglePlayer(button) {
 
 function generateInitialMatches() {
   matches = generatePredefinedUniqueMatches(players);
-  updateMatchList();
+  updateActiveMatch();
 }
 
 function generateMoreMatches() {
@@ -44,7 +44,7 @@ function generateMoreMatches() {
 
   const newMatches = generatePredefinedUniqueMatches(players);
   matches = matches.concat(newMatches);
-  updateMatchList();
+  updateActiveMatch();
 }
 
 function generatePredefinedUniqueMatches(players) {
@@ -67,55 +67,43 @@ function generatePredefinedUniqueMatches(players) {
   return predefinedMatches;
 }
 
-function updateMatchList() {
-  const matchSelect = document.getElementById('matchSelect');
-  matchSelect.innerHTML = matches.map(
-    (m, index) => `<option value="${index}">${m.team1.join(' & ')} vs ${m.team2.join(' & ')}</option>`
-  ).join('');
-  updateActiveMatch();
-}
-
 function updateActiveMatch() {
-  const matchIndex = document.getElementById('matchSelect').value;
   const activeMatchDiv = document.getElementById('activeMatch');
-  if (matchIndex === "") {
-    activeMatchDiv.innerHTML = "Velg en kamp fra listen under";
-  } else {
-    const match = matches[matchIndex];
+  if (matches.length > 0) {
+    const match = matches[0];
     activeMatchDiv.innerHTML = `${match.team1.join(' & ')} vs ${match.team2.join(' & ')}`;
+    updateSliderResult();
+  } else {
+    activeMatchDiv.innerHTML = "Ingen aktive kamper. Generer flere kamper.";
   }
 }
 
-function recordResult() {
-  const matchIndex = parseInt(document.getElementById('matchSelect').value);
-  const predefinedResult = document.getElementById('predefinedResults').value;
-  const team1Score = parseInt(document.getElementById('team1Score').value);
-  const team2Score = parseInt(document.getElementById('team2Score').value);
-  const errorMessage = document.getElementById('errorMessage');
+function updateSliderResult() {
+  const slider = document.getElementById('scoreSlider');
+  const team1Score = 21 - slider.value;
+  const team2Score = parseInt(slider.value, 10);
 
-  if (isNaN(matchIndex) || matchIndex < 0 || matchIndex >= matches.length) {
-    alert('Velg en gyldig kamp for å registrere resultat.');
+  if (matches.length > 0) {
+    document.getElementById('team1Score').textContent = team1Score;
+    document.getElementById('team2Score').textContent = team2Score;
+  }
+}
+
+function recordSliderResult() {
+  if (matches.length === 0) {
+    alert('Ingen kamp å registrere resultat for.');
     return;
   }
 
-  let result;
-  if (predefinedResult) {
-    result = predefinedResult;
-  } else if (!isNaN(team1Score) && !isNaN(team2Score) && team1Score + team2Score === 21) {
-    result = `${team1Score}-${team2Score}`;
-  } else {
-    errorMessage.style.display = 'block';
-    return;
-  }
+  const slider = document.getElementById('scoreSlider');
+  const team1Score = 21 - slider.value;
+  const team2Score = parseInt(slider.value, 10);
 
-  errorMessage.style.display = 'none';
-
-  const match = matches[matchIndex];
+  const match = matches.shift();
+  const result = `${team1Score}-${team2Score}`;
   results.push({ match, result });
-  matches.splice(matchIndex, 1);
 
   updateScoringHistory();
-  updateMatchList();
   updateActiveMatch();
   updateStandings();
 }
@@ -124,8 +112,29 @@ function updateScoringHistory() {
   const scoringHistoryList = document.getElementById('scoringHistoryList');
   scoringHistoryList.innerHTML = results.map((entry, index) => {
     const { match, result } = entry;
-    return `<li>${match.team1.join(' & ')} vs ${match.team2.join(' & ')}: ${result} <button onclick="editResult(${index})">Rediger</button></li>`;
+    return `
+      <li>
+        ${match.team1.join(' & ')} vs ${match.team2.join(' & ')}: ${result}
+        <button onclick="editResult(${index})">Rediger</button>
+      </li>`;
   }).join('');
+}
+
+function editResult(index) {
+  const { match, result } = results[index];
+  const newResult = prompt(`Rediger resultat for ${match.team1.join(' & ')} vs ${match.team2.join(' & ')}`, result);
+  if (newResult && /^[0-9]+-[0-9]+$/.test(newResult)) {
+    const [score1, score2] = newResult.split('-').map(Number);
+    if (score1 + score2 === 21) {
+      results[index].result = newResult;
+      updateScoringHistory();
+      updateStandings();
+    } else {
+      alert('Summen av poengene må være 21.');
+    }
+  } else {
+    alert('Ugyldig format. Prøv igjen.');
+  }
 }
 
 function updateStandings() {
@@ -148,6 +157,7 @@ function updateStandings() {
   });
 
   const sortedStandings = Object.entries(standings).sort(([, a], [, b]) => b.goalDiff - a.goalDiff || b.wins - a.wins);
+  
   const standingsList = document.getElementById('standingsList');
   standingsList.innerHTML = sortedStandings.map(
     ([player, stats]) => `<li>${player}: ${stats.wins} seire, ${stats.goalDiff} målforskjell</li>`

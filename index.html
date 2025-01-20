@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Padel Turnering</title>
+  <link rel="stylesheet" href="https://drive.google.com/file/d/1SOrcfYJDyS492NST8JfDiqPqOItiGk3s/view?usp=drive_link">
+</head>
+<body>
+  <div class="app-container">
+    <h1>Padel Turnering</h1>
+
+    <div class="section">
+      <h2>Velg Spillere</h2>
+      <div id="playerButtons" class="player-container">
+        <button class="player-button" data-player="Lars">Lars</button>
+        <button class="player-button" data-player="Bård">Bård</button>
+        <button class="player-button" data-player="Torfinn">Torfinn</button>
+        <button class="player-button" data-player="Jacob">Jacob</button>
+      </div>
+      <input type="text" id="newPlayer" placeholder="Legg til ny spiller">
+      <button class="action-button" onclick="addPlayer()">Legg til</button>
+    </div>
+
+    <div class="section">
+      <h2>Generer Kamper</h2>
+      <button class="action-button" onclick="generateMoreMatches()">Generer Kamper</button>
+    </div>
+
+    <div class="section">
+      <h2>Aktiv Kamp</h2>
+      <div id="activeMatch" class="highlight">Velg en kamp fra listen under</div>
+      <select id="matchSelect" onchange="updateActiveMatch()">
+        <option value="">Velg en kamp</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <h2>Registrer Resultat</h2>
+      <select id="predefinedResults">
+        <option value="">Velg resultat</option>
+        <option value="11-10">11-10</option>
+        <option value="10-11">10-11</option>
+        <option value="12-9">12-9</option>
+        <option value="9-12">9-12</option>
+        <option value="13-8">13-8</option>
+        <option value="8-13">8-13</option>
+      </select>
+      <input type="number" id="team1Score" placeholder="Lag 1 poeng">
+      <input type="number" id="team2Score" placeholder="Lag 2 poeng">
+      <button class="action-button" onclick="recordResult()">Registrer</button>
+      <p id="errorMessage" class="error-message" style="display: none;">Ugyldig resultat. Summen må være 21.</p>
+    </div>
+
+    <div class="section">
+      <h2>Turneringstabell</h2>
+      <ul id="standingsList"></ul>
+    </div>
+
+    <div class="section">
+      <h2>Historikk</h2>
+      <ul id="scoringHistoryList"></ul>
+    </div>
+  </div>
+
+  <script src="https://drive.google.com/file/d/1fVAZJbL-67qy4yESJmOsGpXDbmLBDeGW/view?usp=drive_link"></script>
+</body>
+</html>

@@ -18,13 +18,11 @@ function togglePlayer(button) {
     button.classList.add('selected');
   }
 
-  console.log("Selected players:", players);
-
   if (players.length === 4) {
     generateInitialMatches();
   } else if (players.length > 4) {
     alert('Velg kun 4 spillere.');
-    players = players.slice(0, 4); // Limit to 4 players
+    players = players.slice(0, 4);
     document.querySelectorAll('.player-button').forEach(btn => {
       if (!players.includes(btn.dataset.player)) {
         btn.classList.remove('selected');
@@ -34,9 +32,8 @@ function togglePlayer(button) {
 }
 
 function generateInitialMatches() {
-  matches = generateRandomMatches(players, 3);
+  matches = generatePredefinedUniqueMatches(players);
   updateMatchList();
-  console.log("Initial matches generated:", matches);
 }
 
 function generateMoreMatches() {
@@ -45,43 +42,29 @@ function generateMoreMatches() {
     return;
   }
 
-  const newMatches = generateRandomMatches(players, 3, matches[matches.length - 1]);
+  const newMatches = generatePredefinedUniqueMatches(players);
   matches = matches.concat(newMatches);
   updateMatchList();
-  console.log("Additional matches generated:", newMatches);
 }
 
-function generateRandomMatches(players, numMatches, lastMatch = null) {
-  const allPossibleMatches = [];
-  for (let i = 0; i < players.length; i++) {
-    for (let j = i + 1; j < players.length; j++) {
-      const team1 = [players[i], players[j]];
-      const team2 = players.filter(player => !team1.includes(player));
-      allPossibleMatches.push({ team1, team2 });
-    }
+function generatePredefinedUniqueMatches(players) {
+  if (players.length !== 4) {
+    alert('Velg nøyaktig 4 spillere.');
+    return [];
   }
 
-  // Shuffle for randomness
-  for (let i = allPossibleMatches.length - 1; i > 0; i--) {
+  const predefinedMatches = [
+    { team1: [players[0], players[1]], team2: [players[2], players[3]] },
+    { team1: [players[0], players[2]], team2: [players[1], players[3]] },
+    { team1: [players[0], players[3]], team2: [players[1], players[2]] },
+  ];
+
+  for (let i = predefinedMatches.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [allPossibleMatches[i], allPossibleMatches[j]] = [allPossibleMatches[j], allPossibleMatches[i]];
+    [predefinedMatches[i], predefinedMatches[j]] = [predefinedMatches[j], predefinedMatches[i]];
   }
 
-  const selectedMatches = [];
-  while (selectedMatches.length < numMatches) {
-    const match = allPossibleMatches.pop();
-
-    // Ensure no consecutive duplicates
-    if (!lastMatch || JSON.stringify(match) !== JSON.stringify(lastMatch)) {
-      selectedMatches.push(match);
-    }
-
-    if (allPossibleMatches.length === 0) {
-      break; // Prevent infinite loop
-    }
-  }
-
-  return selectedMatches;
+  return predefinedMatches;
 }
 
 function updateMatchList() {
@@ -104,11 +87,16 @@ function updateActiveMatch() {
 }
 
 function recordResult() {
-  const matchIndex = document.getElementById('matchSelect').value;
+  const matchIndex = parseInt(document.getElementById('matchSelect').value);
   const predefinedResult = document.getElementById('predefinedResults').value;
   const team1Score = parseInt(document.getElementById('team1Score').value);
   const team2Score = parseInt(document.getElementById('team2Score').value);
   const errorMessage = document.getElementById('errorMessage');
+
+  if (isNaN(matchIndex) || matchIndex < 0 || matchIndex >= matches.length) {
+    alert('Velg en gyldig kamp for å registrere resultat.');
+    return;
+  }
 
   let result;
   if (predefinedResult) {
@@ -121,6 +109,7 @@ function recordResult() {
   }
 
   errorMessage.style.display = 'none';
+
   const match = matches[matchIndex];
   results.push({ match, result });
   matches.splice(matchIndex, 1);
@@ -137,18 +126,6 @@ function updateScoringHistory() {
     const { match, result } = entry;
     return `<li>${match.team1.join(' & ')} vs ${match.team2.join(' & ')}: ${result} <button onclick="editResult(${index})">Rediger</button></li>`;
   }).join('');
-}
-
-function editResult(index) {
-  const { match, result } = results[index];
-  const newResult = prompt(`Rediger resultat for ${match.team1.join(' & ')} vs ${match.team2.join(' & ')}`, result);
-  if (newResult && /^[0-9]+-[0-9]+$/.test(newResult)) {
-    results[index].result = newResult;
-    updateScoringHistory();
-    updateStandings();
-  } else {
-    alert('Ugyldig resultatformat. Prøv igjen.');
-  }
 }
 
 function updateStandings() {

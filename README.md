@@ -2,12 +2,12 @@
 A simple, mobile-friendly web application to organize and manage padel tournaments. Players can register, generate matches, record results, and view live standings and match history. The app is designed for ease of use, especially on mobile devices, and supports result editing.
 
 # Features
-Player Selection: Predefined players can be toggled as participants.
-Match Generation: Automatically generates unique matches with predefined teams. Option to generate additional matches.
-Active Match Display: Always shows the current match to register results.
-Result Registration: Input results using a dynamic slider ensuring scores sum to 21.
-Standings: Displays live standings ranked by goal difference and wins.
-Match History: Records all results, with an option to edit previously registered results.
+* Player Selection: Predefined players can be toggled as participants.
+* Match Generation: Automatically generates unique matches with predefined teams. Option to generate additional matches.
+* Active Match Display: Always shows the current match to register results.
+* Result Registration: Input results using a dynamic slider ensuring scores sum to 21.
+* Standings: Displays live standings ranked by goal difference and wins.
+* Match History: Records all results, with an option to edit previously registered results.
 # How to Use
 1. Select Players
 Choose 4 players from the predefined list.

@@ -31,7 +31,7 @@ JavaScript: For app logic, result validation, and dynamic updates.
 # Customization
 To Add New Players:
 Modify the index.html file under the <div id="playerButtons"> section:
-* //"<button class="player-button" data-player="New Player">New Player</button>"
+* //"button class="player-button" data-player="New Player"New Player</button>"
 # Future Enhancements
 Support for custom player names.
 Match scheduling with time and date.

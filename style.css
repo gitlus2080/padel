@@ -1,3 +1,4 @@
+/* Grunnleggende stil for siden */
 body {
   font-family: Arial, sans-serif;
   margin: 0;
@@ -9,41 +10,24 @@ body {
   min-height: 100vh;
 }
 
+/* Hovedcontainer for appen */
 .app-container {
   max-width: 400px;
   text-align: center;
   width: 100%;
 }
 
+/* Tittel */
 h1 {
   color: #2c3e50;
 }
 
+/* Seksjoner */
 .section {
   margin-bottom: 20px;
 }
 
-.player-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-}
-
-.player-button {
-  background-color: #eafaf1;
-  border: 2px solid #2c3e50;
-  border-radius: 5px;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.player-button.selected {
-  background-color: #2c3e50;
-  color: white;
-}
-
+/* Knappestil */
 .action-button {
   background-color: #2c3e50;
   color: white;
@@ -58,6 +42,7 @@ h1 {
   background-color: #34495e;
 }
 
+/* Fremhevet tekst */
 .highlight {
   background-color: #eafaf1;
   border: 2px solid #2c3e50;
@@ -66,28 +51,126 @@ h1 {
   margin: 10px 0;
 }
 
-input, select {
+/* Spillerknapper */
+.player-container {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.player-button {
+  background-color: #ddd;
+  border: 2px solid #2c3e50;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.player-button.selected {
+  background-color: #2c3e50;
+  color: white;
+}
+
+/* Slider-stil */
+.slider-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.slider-result {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-top: 20px; /* Økt margin for bedre luft */
+  margin-bottom: 20px; /* Økt margin under resultatet */
+}
+
+.slider-result .score {
+  color: #e74c3c;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
   width: 100%;
+  height: 10px;
+  background: #ddd;
+  outline: none;
+  opacity: 0.8;
+  border-radius: 5px;
+  margin-top: 20px; /* Økt margin rundt slideren */
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #2c3e50;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #2c3e50;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+/* Tabellstil */
+#standingsList {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+#standingsList li {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
   padding: 10px;
   margin: 5px 0;
   font-size: 16px;
+  font-weight: bold;
+  text-align: left;
+}
+
+/* Fremheving for topp-plasseringen */
+#standingsList li:first-child {
+  background-color: #2ecc71; /* Grønn for topp-plassen */
+  color: white;
+  border: 1px solid #27ae60;
+}
+
+/* Historikk */
+#scoringHistoryList li {
+  background-color: #fff;
   border: 1px solid #ccc;
   border-radius: 5px;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  background-color: #ffffff;
   padding: 10px;
   margin: 5px 0;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.error-message {
-  color: red;
+#scoringHistoryList li button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#scoringHistoryList li button:hover {
+  background-color: #c0392b;
 }

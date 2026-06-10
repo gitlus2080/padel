@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>Padel Pro Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        /* Minimalistisk erstatning for Tailwind (Offline-vennlig) */
+        body { background-color: #0f172a; color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; }
+        .app-container { max-width: 440px; margin: 0 auto; padding: 16px; box-sizing: border-box; padding-bottom: 80px; }
+        .title { font-size: 2.25rem; font-weight: 900; color: #4ade80; font-style: italic; letter-spacing: -0.05em; margin: 0 0 4px 0; text-align: center; }
+        .subtitle { font-size: 0.75rem; color: #94a3b8; font-weight: 500; margin: 0 0 24px 0; text-align: center; text-transform: uppercase; letter-spacing: 0.05em; }
+        .card { background-color: #1e293b; padding: 24px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); border: 1px solid #334155; }
+        .label { display: block; font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; tracking-width: 0.05em; margin-bottom: 8px; }
+        .input-text { width: 100%; padding: 12px; background-color: #334155; border: none; border-radius: 12px; color: white; font-size: 0.875rem; box-sizing: border-box; outline: none; transition: ring 0.2s; }
+        .input-text:focus { ring: 2px solid #4ade80; }
+        .btn-primary { width: 100%; background-color: #4ade80; color: #0f172a; padding: 16px; border: none; border-radius: 16px; font-weight: 900; font-size: 1.125rem; cursor: pointer; transition: transform 0.1s; box-shadow: 0 10px 15px -3px rgba(74,222,128,0.2); }
+        .btn-primary:active { transform: scale(0.97); }
+        .btn-secondary { width: 100%; background-color: #334155; color: #cbd5e1; padding: 10px; border: 1px dashed #64748b; border-radius: 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; margin-bottom: 16px; }
+        .grid-2 { display: grid; grid-cols: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 24px; }
+        .mode-btn { padding: 12px; border-radius: 12px; font-weight: 700; font-size: 0.875rem; border: 1px solid transparent; cursor: pointer; background-color: #334155; color: #cbd5e1; }
+        .mode-btn.active { background-color: #4ade80; color: #0f172a; border-color: #4ade80; }
+        .mode-desc { display: block; font-size: 10px; font-weight: 400; opacity: 0.8; }
+        .player-row { display: flex; gap: 8px; alignment-items: center; margin-bottom: 12px; }
+        .btn-remove { padding: 12px; background-color: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.3); border-radius: 12px; cursor: pointer; }
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 0 8px; }
+        .btn-close { background-color: rgba(239,68,68,0.2); color: #f87171; padding: 6px 16px; border-radius: 9999px; font-size: 10px; font-weight: 900; border: 1px solid rgba(239,68,68,0.5); text-transform: uppercase; cursor: pointer; }
+        .table-card { background-color: #1e293b; border-radius: 16px; overflow: hidden; border: 1px solid #334155; margin-bottom: 24px; width: 100%; border-collapse: collapse; }
+        .table-card th { background-color: #334155; color: #94a3b8; font-size: 10px; text-transform: uppercase; padding: 12px; text-align: center; }
+        .table-card th:first-child, .table-card td:first-child { text-align: left; }
+        .table-card td { padding: 12px; border-bottom: 1px solid #334155; font-size: 0.875rem; font-weight: 700; text-align: center; }
+        .table-card tr.leader { background-color: rgba(74,222,128,0.05); }
+        .match-box { display: flex; justify-content: space-around; align-items: center; gap: 16px; }
+        .team-slot { width: 45%; text-align: center; }
+        .team-title { font-size: 9px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .team-names { font-size: 0.75rem; font-weight: 700; h: 48px; display: flex; align-items: center; justify-content: center; color: #e2e8f0; margin-bottom: 8px; line-height: 1.2; }
+        .input-score { width: 100%; aspect-ratio: 1; text-align: center; font-size: 2.25rem; font-weight: 900; background-color: #0f172a; border: 2px solid #334155; border-radius: 16px; color: white; outline: none; }
+        .input-score:focus { border-color: #4ade80; }
+        .vs-text { color: #334155; font-weight: 900; font-style: italic; font-size: 1.25rem; padding-top: 40px; }
+        .history-section { margin-top: 24px; }
+        .history-item { background-color: #1e293b; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; border: 1px solid rgba(51,65,85,0.5); margin-bottom: 8px; }
+        .history-score-input { width: 32px; h: 32px; background-color: #0f172a; border: 1px solid #334155; border-radius: 4px; text-align: center; font-weight: bold; color: white; }
+        .btn-delete { background-color: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); width: 24px; height: 24px; border-radius: 4px; cursor: pointer; margin-left: 8px; }
+        @keyframes celebrate { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; } }
+        .confetti { position: fixed; font-size: 2rem; animation: celebrate 4s linear infinite; z-index: 50; pointer-events: none; top: 100vh; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script>
+        // Siden vi dropper tunge CDN-pakker for fullstendig offline-støtte, bruker vi her en superlett 
+        // inline-tilnærming basert på ren vanilje-JS som speiler nøyaktig den React-logikken du hadde.
+        let state = {
+            step: localStorage.getItem('padel_step') || 'setup',
+            gameMode: localStorage.getItem('padel_gameMode') || 'americano',
+            playerNames: JSON.parse(localStorage.getItem('padel_playerNames')) || ['', '', '', ''],
+            history: JSON.parse(localStorage.getItem('padel_history')) || [],
+            nextS1: '', nextS2: ''
+        };
+
+        function saveState() {
+            localStorage.setItem('padel_step', state.step);
+            localStorage.setItem('padel_gameMode', state.gameMode);
+            localStorage.setItem('padel_playerNames', JSON.stringify(state.playerNames));
+            localStorage.setItem('padel_history', JSON.stringify(state.history));
+        }
+
+        function render() {
+            const root = document.getElementById('root');
+            saveState();
+
+            const validPlayers = state.playerNames.filter(n => n.trim() !== '');
+            
+            // Logikk for kampoppsett (Round Robin-kombinasjoner)
+            let allMatches = [];
+            if (validPlayers.length >= 4) {
+                for (let i = 0; i < validPlayers.length; i++) {
+                    for (let j = i + 1; j < validPlayers.length; j++) {
+                        for (let k = 0; k < validPlayers.length; k++) {
+                            for (let l = k + 1; l < validPlayers.length; l++) {
+                                if (i !== k && i !== l && j !== k && j !== l) {
+                                    const t1 = [validPlayers[i], validPlayers[j]].sort();
+                                    const t2 = [validPlayers[k], validPlayers[l]].sort();
+                                    if (t1[0] < t2[0]) {
+                                        if(!allMatches.some(m => m.t1[0] === t1[0] && m.t1[1] === t1[1] && m.t2[0] === t2[0])) {
+                                            allMatches.push({ t1, t2 });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                allMatches.sort((a, b) => (a.t1[0] + a.t2[0]).localeCompare(b.t1[0] + b.t2[0]));
+            }
+
+            // Beregn tabell
+            let stats = validPlayers.map(name => ({ name, wins: 0, diff: 0, played: 0 }));
+            state.history.forEach(match => {
+                const s1 = parseInt(match.score1) || 0;
+                const s2 = parseInt(match.score2) || 0;
+                [match.team1, match.team2].forEach((team, i) => {
+                    const score = i === 0 ? s1 : s2;
+                    const oppScore = i === 0 ? s2 : s1;
+                    team.forEach(pName => {
+                        const p = stats.find(s => s.name === pName);
+                        if (p) {
+                            p.played += 1;
+                            p.diff += (score - oppScore);
+                            if (score > oppScore) p.wins += 1;
+                        }
+                    });
+                });
+            });
+            if (state.gameMode === 'americano') {
+                stats.sort((a, b) => b.diff - a.diff || b.wins - a.wins);
+            } else {
+                stats.sort((a, b) => b.wins - a.wins || b.diff - a.diff);
+            }
+
+            // Neste kamp
+            let nextT1 = ['?', '?'], nextT2 = ['?', '?'];
+            if (allMatches.length > 0) {
+                const idx = state.history.length % allMatches.length;
+                nextT1 = allMatches[idx].t1;
+                nextT2 = allMatches[idx].t2;
+            }
+
+            // --- VIEW: SETUP ---
+            if (state.step === 'setup') {
+                root.innerHTML = `
+                    <div class="app-container" style="text-align: center;">
+                        <h1 class="title">PADEL RANK</h1>
+                        <p class="subtitle">Americano & Kamp-tracker</p>
+                        <div class="card" style="text-align: left;">
+                            <label class="label">Spillemodus</label>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px;">
+                                <button onclick="setGameMode('americano')" class="mode-btn ${state.gameMode === 'americano' ? 'active' : ''}">🎾 Americano<span class="mode-desc">Hvert poeng teller</span></button>
+                                <button onclick="setGameMode('sett')" class="mode-btn ${state.gameMode === 'sett' ? 'active' : ''}">🏆 Vanlige Sett<span class="mode-desc">Flest seire vinner</span></button>
+                            </div>
+                            <label class="label">Spillere (${state.playerNames.length})</label>
+                            <div style="margin-bottom: 16px;">
+                                ${state.playerNames.map((n, i) => `
+                                    <div class="player-row">
+                                        <input class="input-text" placeholder="Navn spiller ${i+1}" value="${n}" oninput="updatePlayerName(${i}, this.value)">
+                                        ${state.playerNames.length > 4 ? `<button onclick="removePlayerField(${i})" class="btn-remove">✕</button>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ${state.playerNames.length < 8 ? `<button onclick="addPlayerField()" class="btn-secondary">+ LEGG TIL SPILLER</button>` : ''}
+                            <button onclick="startTournament()" class="btn-primary">START TURNERING</button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // --- VIEW: PODIUM ---
+            if (state.step === 'podium') {
+                root.innerHTML = `
+                    <div class="app-container" style="text-align: center;">
+                        <h1 class="title" style="color:white;">RESULTATER</h1>
+                        <div style="font-size: 4rem; margin: 16px 0;">🏆</div>
+                        <div class="card" style="border-color: #4ade80; margin-bottom: 24px;">
+                            ${stats.length > 0 ? `
+                                <div style="border-bottom: 1px solid #334155; padding-bottom: 16px; margin-bottom: 16px;">
+                                    <div class="label" style="color: #4ade80;">Turneringens vinner</div>
+                                    <div style="font-size: 2rem; font-weight: 900; text-transform: uppercase;">${stats[0].name}</div>
+                                    <div style="font-size: 0.875rem; margin-top: 8px; color: #94a3b8;">Diff: ${stats[0].diff > 0 ? '+' + stats[0].diff : stats[0].diff} | Seiere: ${stats[0].wins}</div>
+                                </div>
+                            ` : ''}
+                            <div>
+                                ${stats.slice(1).map((p, i) => `
+                                    <div style="display: flex; justify-content: space-between; padding: 10px; background: rgba(255,255,255,0.02); margin-bottom: 8px; border-radius: 8px;">
+                                        <div><span style="color:#64748b; font-weight:900;">${i+2}.</span> ${p.name}</div>
+                                        <div style="font-family: monospace;">Diff: ${p.diff > 0 ? '+' + p.diff : p.diff} (S:${p.wins})</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <button onclick="resetTournament()" class="btn-primary" style="background-color: #334155; color: white; box-shadow: none;">NY TURNERING</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // --- VIEW: TOURNAMENT ---
+            root.innerHTML = `
+                <div class="app-container">
+                    <div class="header-row">
+                        <div>
+                            <h1 class="title" style="text-align:left; font-size: 1.5rem;">PADEL RANK</h1>
+                            <span class="label" style="margin:0; font-size:9px;">${state.gameMode === 'americano' ? 'Americano-modus' : 'Sett-modus'}</span>
+                        </div>
+                        <button onclick="setStep('podium')" class="btn-close">Avslutt</button>
+                    </div>
+
+                    <table class="table-card">
+                        <thead>
+                            <tr>
+                                <th>Spiller</th>
+                                <th>Kamper</th>
+                                <th>Diff</th>
+                                <th>Seiere</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${stats.map((p, i) => `
+                                <tr class="${i === 0 ? 'leader' : ''}">
+                                    <td style="text-align:left;">${i === 0 ? '👑 ' : ''}${p.name}</td>
+                                    <td style="color:#94a3b8; font-family: monospace;">${p.played}</td>
+                                    <td style="color: ${p.diff >= 0 ? '#4ade80' : '#f87171'}; font-family: monospace;">${p.diff > 0 ? '+' + p.diff : p.diff}</td>
+                                    <td>${p.wins}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+
+                    <div class="card" style="margin-bottom: 32px;">
+                        <div class="match-box">
+                            <div class="team-slot">
+                                <div class="team-title">Team 1</div>
+                                <div class="team-names">${nextT1.join(' & ')}</div>
+                                <input type="number" pattern="[0-9]*" inputmode="numeric" id="score1Field" class="input-score" placeholder="0" value="${state.nextS1}" oninput="state.nextS1 = this.value">
+                            </div>
+                            <div class="vs-text">VS</div>
+                            <div class="team-slot">
+                                <div class="team-title">Team 2</div>
+                                <div class="team-names">${nextT2.join(' & ')}</div>
+                                <input type="number" pattern="[0-9]*" inputmode="numeric" id="score2Field" class="input-score" placeholder="0" value="${state.nextS2}" oninput="state.nextS2 = this.value">
+                            </div>
+                        </div>
+                        <button onclick="addMatch('${nextT1.join(',')}', '${nextT2.join(',')}')" class="btn-primary" style="margin-top: 24px;">LAGRE RESULTAT</button>
+                    </div>
+
+                    ${state.history.length > 0 ? `
+                        <div class="history-section">
+                            <label class="label">Kamphistorikk (${state.history.length})</label>
+                            ${state.history.map(m => `
+                                <div class="history-item">
+                                    <div style="max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        <span style="color: white; font-weight: bold;">${m.team1.join('/')}</span> vs <span style="color: white; font-weight: bold;">${m.team2.join('/')}</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <input type="number" class="history-score-input" value="${m.score1}" onchange="updateHistoryScore(${m.id}, 'score1', this.value)">
+                                        <span style="color:#475569;">:</span>
+                                        <input type="number" class="history-score-input" value="${m.score2}" onchange="updateHistoryScore(${m.id}, 'score2', this.value)">
+                                        <button onclick="deleteMatch(${m.id})" class="btn-delete">🗑️</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Funksjoner for å oppdatere staten
+        function setGameMode(mode) { state.gameMode = mode; render(); }
+        function setStep(step) { state.step = step; render(); }
+        function updatePlayerName(i, val) { state.playerNames[i] = val; saveState(); }
+        function addPlayerField() { if(state.playerNames.length < 8) { state.playerNames.push(''); render(); } }
+        function removePlayerField(i) { if(state.playerNames.length > 4) { state.playerNames.splice(i, 1); render(); } }
+        
+        function startTournament() {
+            const valid = state.playerNames.filter(n => n.trim() !== '');
+            if(valid.length < 4) return alert("Tast inn minst 4 spillere!");
+            state.playerNames = valid;
+            state.step = 'tournament';
+            render();
+        }
+
+        function addMatch(t1Str, t2Str) {
+            if(state.nextS1 === '' || state.nextS2 === '') return;
+            state.history.unshift({
+                id: Date.now(),
+                team1: t1Str.split(','),
+                team2: t2Str.split(','),
+                score1: parseInt(state.nextS1) || 0,
+                score2: parseInt(state.nextS2) || 0
+            });
+            state.nextS1 = ''; state.nextS2 = '';
+            render();
+        }
+
+        function updateHistoryScore(id, field, val) {
+            const m = state.history.find(x => x.id === id);
+            if(m) m[field] = parseInt(val) || 0;
+            render();
+        }
+
+        function deleteMatch(id) {
+            if(confirm("Slette kampen?")) {
+                state.history = state.history.filter(x => x.id !== id);
+                render();
+            }
+        }
+
+        function resetTournament() {
+            if(confirm("Slette alt og starte ny turnering?")) {
+                localStorage.clear();
+                state = { step: 'setup', gameMode: 'americano', playerNames: ['', '', '', ''], history: [], nextS1: '', nextS2: '' };
+                render();
+            }
+        }
+
+        // Første oppstart
+        render();
+    </script>
+</body>
+</html>

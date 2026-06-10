@@ -1,39 +1,46 @@
-# Padel Tournament App
-A simple, mobile-friendly web application to organize and manage padel tournaments. Players can register, generate matches, record results, and view live standings and match history. The app is designed for ease of use, especially on mobile devices, and supports result editing.
+# 🎾 Padel Pro Tracker
 
-# Features
-* Player Selection: Predefined players can be toggled as participants.
-* Match Generation: Automatically generates unique matches with predefined teams. Option to generate additional matches.
-* Active Match Display: Always shows the current match to register results.
-* Result Registration: Input results using a dynamic slider ensuring scores sum to 21.
-* Standings: Displays live standings ranked by goal difference and wins.
-* Match History: Records all results, with an option to edit previously registered results.
-# How to Use
-1. Select Players
-Choose 4 players from the predefined list.
-2. Generate Matches
-Click "Generer Flere Kamper" to create matches.
-Matches are displayed one at a time under "Aktiv Kamp."
-3. Register Results
-Adjust the slider to set the match result.
-Click "Registrer" to save the result.
-The next match automatically becomes active.
-4. View Standings
-Check the live standings under "Turneringstabell."
-Standings are updated automatically after every registered result.
-5. Review and Edit History
-All recorded results are listed under "Historikk."
-Click "Rediger" next to any result to modify it.
-# Technologies Used
-HTML: For structuring the app.
-CSS: For styling and layout.
-JavaScript: For app logic, result validation, and dynamic updates.
-# Customization
-To Add New Players:
-Modify the index.html file under the <div id="playerButtons"> section:
-* //"button class="player-button" data-player="New Player"New Player</button>"
-# Future Enhancements
-Support for custom player names.
-Match scheduling with time and date.
-Export standings and results as a CSV file.
-Multi-round tournaments or elimination brackets.
+Padel Pro Tracker er en lynrask, mobilvennlig web-applikasjon (PWA) designet for å holde styr på poeng, kamper og tabeller i uformelle padel-turneringer. Appen støtter både dynamisk partnerbytte (Americano) og tradisjonell spillestil.
+
+Appen er bygget for å fungere **100 % offline**, slik at den kan brukes i padelhaller med dårlig eller manglende mobildekning.
+
+## ✨ Funksjoner
+
+*   **To Spillemoduser:**
+    *   **Americano:** Hvert enkelt poeng teller. Tabellen sorteres basert på poengdifferanse.
+    *   **Vanlige Sett:** Det spilles tradisjonelle sett (f.eks. til 6 games). Tabellen prioriterer antall seire, med gamedifferanse som "tiebreaker".
+*   **Dynamisk Skalering:** Støtter alt fra 2 til 8 spillere.
+    *   **Singel (1v1):** Aktiveres automatisk hvis det registreres 2 eller 3 spillere.
+    *   **Lag (2v2):** Aktiveres automatisk ved 4 eller flere spillere, og genererer en "Round Robin"-rotasjon der man roterer partnere.
+*   **Feiltolerant:** Inkluderer en dedikert "Angre/Gå tilbake"-knapp på resultatskjermen, slik at en turnering ikke slettes ved et uhell. Tidligere kamper kan også redigeres eller slettes direkte fra historikken.
+*   **Fungerer Offline (PWA):** Kan installeres direkte på hjemskjermen på iOS og Android. Ingen eksterne avhengigheter (CDN-lenker) betyr at appen laster umiddelbart uavhengig av nettforbindelse.
+*   **Persistent Lagring:** Bruker `localStorage` for å lagre nåværende turnering, slik at du ikke mister data selv om du lukker appen eller oppdaterer siden midt i en match.
+
+## 🛠️ Teknologier
+
+Appen er minimalistisk bygget for maksimal ytelse og uavhengighet:
+*   **HTML5 & CSS3:** Skreddersydd mørkt design (Dark Mode) optimert for mobilskjermer.
+*   **JavaScript (Vanilla):** Ren, moderne JavaScript som driver spillogikken og tabellberegningene uten tunge eksterne rammeverk.
+*   **Web App Manifest:** Gjør nettsiden kjørbar som en frittstående, installerbar applikasjon på smarttelefoner.
+
+## 🚀 Slik installerer du den på telefonen
+
+Siden dette er en Progressive Web App (PWA), trenger du ikke gå via Google Play eller App Store:
+
+1.  Åpne nettadressen i nettleseren på telefonen din (f.eks. via Safari på iPhone eller Chrome på Android).
+2.  **På iPhone (Safari):** Trykk på *Del-knappen* (firkant med pil opp) og velg **Legg til på Hjem-skjermen**.
+3.  **På Android (Chrome):** Trykk på de tre prikkene øverst til høyre og velg **Installer app** eller **Legg til på startskjerm**.
+4.  Appen ligger nå på hjemskjermen din med eget ikon og åpnes i fullskjerm uten nettleserfelt.
+
+## 💻 Lokal utvikling og distribusjon
+
+Prosjektet er rigget for kontinuerlig utrulling (CI/CD) via Vercel. 
+
+For å gjøre endringer lokalt:
+1. Klone dette prosjektet til din PC.
+2. Gjør endringer i `index.html` eller `manifest.json`.
+3. Push endringene til GitHub:
+```bash
+   git add .
+   git commit -m "Beskrivelse av endringen din"
+   git push origin main

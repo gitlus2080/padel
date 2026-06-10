@@ -9,7 +9,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
-        /* Minimalistisk erstatning for Tailwind (Offline-vennlig) */
         body { background-color: #0f172a; color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; }
         .app-container { max-width: 440px; margin: 0 auto; padding: 16px; box-sizing: border-box; padding-bottom: 80px; }
         .title { font-size: 2.25rem; font-weight: 900; color: #4ade80; font-style: italic; letter-spacing: -0.05em; margin: 0 0 4px 0; text-align: center; }
@@ -45,8 +44,6 @@
         .history-item { background-color: #1e293b; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; border: 1px solid rgba(51,65,85,0.5); margin-bottom: 8px; }
         .history-score-input { width: 32px; h: 32px; background-color: #0f172a; border: 1px solid #334155; border-radius: 4px; text-align: center; font-weight: bold; color: white; }
         .btn-delete { background-color: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); width: 24px; height: 24px; border-radius: 4px; cursor: pointer; margin-left: 8px; }
-        @keyframes celebrate { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; } }
-        .confetti { position: fixed; font-size: 2rem; animation: celebrate 4s linear infinite; z-index: 50; pointer-events: none; top: 100vh; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
     </style>
@@ -55,8 +52,6 @@
     <div id="root"></div>
 
     <script>
-        // Siden vi dropper tunge CDN-pakker for fullstendig offline-støtte, bruker vi her en superlett 
-        // inline-tilnærming basert på ren vanilje-JS som speiler nøyaktig den React-logikken du hadde.
         let state = {
             step: localStorage.getItem('padel_step') || 'setup',
             gameMode: localStorage.getItem('padel_gameMode') || 'americano',
@@ -77,31 +72,42 @@
             saveState();
 
             const validPlayers = state.playerNames.filter(n => n.trim() !== '');
+            const isSingelMode = validPlayers.length < 4;
             
-            // Logikk for kampoppsett (Round Robin-kombinasjoner)
+            // --- GENERERE KAMPOPPSETT ---
             let allMatches = [];
-            if (validPlayers.length >= 4) {
-                for (let i = 0; i < validPlayers.length; i++) {
-                    for (let j = i + 1; j < validPlayers.length; j++) {
-                        for (let k = 0; k < validPlayers.length; k++) {
-                            for (let l = k + 1; l < validPlayers.length; l++) {
-                                if (i !== k && i !== l && j !== k && j !== l) {
-                                    const t1 = [validPlayers[i], validPlayers[j]].sort();
-                                    const t2 = [validPlayers[k], validPlayers[l]].sort();
-                                    if (t1[0] < t2[0]) {
-                                        if(!allMatches.some(m => m.t1[0] === t1[0] && m.t1[1] === t1[1] && m.t2[0] === t2[0])) {
-                                            allMatches.push({ t1, t2 });
+            if (validPlayers.length >= 2) {
+                if (isSingelMode) {
+                    // Singel: Alle mot alle (1 vs 1)
+                    for (let i = 0; i < validPlayers.length; i++) {
+                        for (let j = i + 1; j < validPlayers.length; j++) {
+                            allMatches.push({ t1: [validPlayers[i]], t2: [validPlayers[j]] });
+                        }
+                    }
+                } else {
+                    // Lag: Par mot par (2 vs 2)
+                    for (let i = 0; i < validPlayers.length; i++) {
+                        for (let j = i + 1; j < validPlayers.length; j++) {
+                            for (let k = 0; k < validPlayers.length; k++) {
+                                for (let l = k + 1; l < validPlayers.length; l++) {
+                                    if (i !== k && i !== l && j !== k && j !== l) {
+                                        const t1 = [validPlayers[i], validPlayers[j]].sort();
+                                        const t2 = [validPlayers[k], validPlayers[l]].sort();
+                                        if (t1[0] < t2[0]) {
+                                            if(!allMatches.some(m => m.t1[0] === t1[0] && m.t1[1] === t1[1] && m.t2[0] === t2[0])) {
+                                                allMatches.push({ t1, t2 });
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
+                    allMatches.sort((a, b) => (a.t1[0] + a.t2[0]).localeCompare(b.t1[0] + b.t2[0]));
                 }
-                allMatches.sort((a, b) => (a.t1[0] + a.t2[0]).localeCompare(b.t1[0] + b.t2[0]));
             }
 
-            // Beregn tabell
+            // --- BEREGNE TABELL ---
             let stats = validPlayers.map(name => ({ name, wins: 0, diff: 0, played: 0 }));
             state.history.forEach(match => {
                 const s1 = parseInt(match.score1) || 0;
@@ -125,8 +131,8 @@
                 stats.sort((a, b) => b.wins - a.wins || b.diff - a.diff);
             }
 
-            // Neste kamp
-            let nextT1 = ['?', '?'], nextT2 = ['?', '?'];
+            // --- FINN NESTE KAMP ---
+            let nextT1 = ['?'], nextT2 = ['?'];
             if (allMatches.length > 0) {
                 const idx = state.history.length % allMatches.length;
                 nextT1 = allMatches[idx].t1;
@@ -150,7 +156,7 @@
                                 ${state.playerNames.map((n, i) => `
                                     <div class="player-row">
                                         <input class="input-text" placeholder="Navn spiller ${i+1}" value="${n}" oninput="updatePlayerName(${i}, this.value)">
-                                        ${state.playerNames.length > 4 ? `<button onclick="removePlayerField(${i})" class="btn-remove">✕</button>` : ''}
+                                        ${state.playerNames.length > 2 ? `<button onclick="removePlayerField(${i})" class="btn-remove">✕</button>` : ''}
                                     </div>
                                 `).join('')}
                             </div>
@@ -162,15 +168,20 @@
                 return;
             }
 
-            // --- VIEW: PODIUM ---
+            // --- VIEW: PODIUM (RESULTATER) ---
             if (state.step === 'podium') {
                 root.innerHTML = `
                     <div class="app-container" style="text-align: center;">
                         <h1 class="title" style="color:white;">RESULTATER</h1>
                         <div style="font-size: 4rem; margin: 16px 0;">🏆</div>
-                        <div class="card" style="border-color: #4ade80; margin-bottom: 24px;">
+                        
+                        <button onclick="setStep('tournament')" class="btn-secondary" style="margin-bottom: 20px; background-color: rgba(74,222,128,0.1); color: #4ade80; border-color: rgba(74,222,128,0.3); padding: 12px;">
+                            ← GÅ TILBAKE (FORTSETT TURNERING)
+                        </button>
+
+                        <div class="card" style="border-color: #4ade80; margin-bottom: 24px; text-align: left;">
                             ${stats.length > 0 ? `
-                                <div style="border-bottom: 1px solid #334155; padding-bottom: 16px; margin-bottom: 16px;">
+                                <div style="border-bottom: 1px solid #334155; padding-bottom: 16px; margin-bottom: 16px; text-align: center;">
                                     <div class="label" style="color: #4ade80;">Turneringens vinner</div>
                                     <div style="font-size: 2rem; font-weight: 900; text-transform: uppercase;">${stats[0].name}</div>
                                     <div style="font-size: 0.875rem; margin-top: 8px; color: #94a3b8;">Diff: ${stats[0].diff > 0 ? '+' + stats[0].diff : stats[0].diff} | Seiere: ${stats[0].wins}</div>
@@ -185,7 +196,7 @@
                                 `).join('')}
                             </div>
                         </div>
-                        <button onclick="resetTournament()" class="btn-primary" style="background-color: #334155; color: white; box-shadow: none;">NY TURNERING</button>
+                        <button onclick="resetTournament()" class="btn-primary" style="background-color: #ef4444; color: white; box-shadow: none;">AVSLUTT & SLETT ALT</button>
                     </div>
                 `;
                 return;
@@ -197,9 +208,9 @@
                     <div class="header-row">
                         <div>
                             <h1 class="title" style="text-align:left; font-size: 1.5rem;">PADEL RANK</h1>
-                            <span class="label" style="margin:0; font-size:9px;">${state.gameMode === 'americano' ? 'Americano-modus' : 'Sett-modus'}</span>
+                            <span class="label" style="margin:0; font-size:9px;">${isSingelMode ? 'Singel (1v1)' : 'Lag (2v2)'} • ${state.gameMode === 'americano' ? 'Americano' : 'Sett'}</span>
                         </div>
-                        <button onclick="setStep('podium')" class="btn-close">Avslutt</button>
+                        <button onclick="setStep('podium')" class="btn-close" style="background-color: #334155; color: white; border-color: #475569;">Se Pall / Avslutt</button>
                     </div>
 
                     <table class="table-card">
@@ -226,13 +237,13 @@
                     <div class="card" style="margin-bottom: 32px;">
                         <div class="match-box">
                             <div class="team-slot">
-                                <div class="team-title">Team 1</div>
+                                <div class="team-title">${isSingelMode ? 'Spiller 1' : 'Team 1'}</div>
                                 <div class="team-names">${nextT1.join(' & ')}</div>
                                 <input type="number" pattern="[0-9]*" inputmode="numeric" id="score1Field" class="input-score" placeholder="0" value="${state.nextS1}" oninput="state.nextS1 = this.value">
                             </div>
                             <div class="vs-text">VS</div>
                             <div class="team-slot">
-                                <div class="team-title">Team 2</div>
+                                <div class="team-title">${isSingelMode ? 'Spiller 2' : 'Team 2'}</div>
                                 <div class="team-names">${nextT2.join(' & ')}</div>
                                 <input type="number" pattern="[0-9]*" inputmode="numeric" id="score2Field" class="input-score" placeholder="0" value="${state.nextS2}" oninput="state.nextS2 = this.value">
                             </div>
@@ -259,19 +270,35 @@
                         </div>
                     ` : ''}
                 </div>
+                
+                <!-- Knapp nederst for å kjapt kunne gå til setup igjen om man vil legge til spillere midt i -->
+                <div style="max-w: 440px; margin: 0 auto; padding: 0 16px;">
+                     <button onclick="setStep('setup')" class="btn-secondary" style="border: none; background: transparent; color: #64748b; font-size: 11px;">+ Endre spillere / Modus</button>
+                </div>
             `;
         }
 
-        // Funksjoner for å oppdatere staten
         function setGameMode(mode) { state.gameMode = mode; render(); }
         function setStep(step) { state.step = step; render(); }
         function updatePlayerName(i, val) { state.playerNames[i] = val; saveState(); }
-        function addPlayerField() { if(state.playerNames.length < 8) { state.playerNames.push(''); render(); } }
-        function removePlayerField(i) { if(state.playerNames.length > 4) { state.playerNames.splice(i, 1); render(); } }
+        
+        function addPlayerField() { 
+            if(state.playerNames.length < 8) { 
+                state.playerNames.push(''); 
+                render(); 
+            } 
+        }
+        
+        function removePlayerField(i) { 
+            if(state.playerNames.length > 2) { 
+                state.playerNames.splice(i, 1); 
+                render(); 
+            } 
+        }
         
         function startTournament() {
             const valid = state.playerNames.filter(n => n.trim() !== '');
-            if(valid.length < 4) return alert("Tast inn minst 4 spillere!");
+            if(valid.length < 2) return alert("Tast inn minst 2 spillere for singel!");
             state.playerNames = valid;
             state.step = 'tournament';
             render();
@@ -304,14 +331,13 @@
         }
 
         function resetTournament() {
-            if(confirm("Slette alt og starte ny turnering?")) {
+            if(confirm("Er du HELT sikker på at du vil slette alt og starte på nytt?")) {
                 localStorage.clear();
                 state = { step: 'setup', gameMode: 'americano', playerNames: ['', '', '', ''], history: [], nextS1: '', nextS2: '' };
                 render();
             }
         }
 
-        // Første oppstart
         render();
     </script>
 </body>

@@ -20,11 +20,11 @@
         .btn-primary { width: 100%; background-color: #4ade80; color: #0f172a; padding: 16px; border: none; border-radius: 16px; font-weight: 900; font-size: 1.125rem; cursor: pointer; transition: transform 0.1s; box-shadow: 0 10px 15px -3px rgba(74,222,128,0.2); }
         .btn-primary:active { transform: scale(0.97); }
         .btn-secondary { width: 100%; background-color: #334155; color: #cbd5e1; padding: 10px; border: 1px dashed #64748b; border-radius: 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; margin-bottom: 16px; }
-        .grid-2 { display: grid; grid-cols: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 24px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 24px; }
         .mode-btn { padding: 12px; border-radius: 12px; font-weight: 700; font-size: 0.875rem; border: 1px solid transparent; cursor: pointer; background-color: #334155; color: #cbd5e1; }
         .mode-btn.active { background-color: #4ade80; color: #0f172a; border-color: #4ade80; }
         .mode-desc { display: block; font-size: 10px; font-weight: 400; opacity: 0.8; }
-        .player-row { display: flex; gap: 8px; alignment-items: center; margin-bottom: 12px; }
+        .player-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
         .btn-remove { padding: 12px; background-color: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.3); border-radius: 12px; cursor: pointer; }
         .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 0 8px; }
         .btn-close { background-color: rgba(239,68,68,0.2); color: #f87171; padding: 6px 16px; border-radius: 9999px; font-size: 10px; font-weight: 900; border: 1px solid rgba(239,68,68,0.5); text-transform: uppercase; cursor: pointer; }
@@ -36,13 +36,13 @@
         .match-box { display: flex; justify-content: space-around; align-items: center; gap: 16px; }
         .team-slot { width: 45%; text-align: center; }
         .team-title { font-size: 9px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-        .team-names { font-size: 0.75rem; font-weight: 700; h: 48px; display: flex; align-items: center; justify-content: center; color: #e2e8f0; margin-bottom: 8px; line-height: 1.2; }
+        .team-names { font-size: 0.75rem; font-weight: 700; height: 48px; display: flex; align-items: center; justify-content: center; color: #e2e8f0; margin-bottom: 8px; line-height: 1.2; }
         .input-score { width: 100%; aspect-ratio: 1; text-align: center; font-size: 2.25rem; font-weight: 900; background-color: #0f172a; border: 2px solid #334155; border-radius: 16px; color: white; outline: none; }
         .input-score:focus { border-color: #4ade80; }
         .vs-text { color: #334155; font-weight: 900; font-style: italic; font-size: 1.25rem; padding-top: 40px; }
         .history-section { margin-top: 24px; }
         .history-item { background-color: #1e293b; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; border: 1px solid rgba(51,65,85,0.5); margin-bottom: 8px; }
-        .history-score-input { width: 32px; h: 32px; background-color: #0f172a; border: 1px solid #334155; border-radius: 4px; text-align: center; font-weight: bold; color: white; }
+        .history-score-input { width: 32px; height: 32px; background-color: #0f172a; border: 1px solid #334155; border-radius: 4px; text-align: center; font-weight: bold; color: white; }
         .btn-delete { background-color: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); width: 24px; height: 24px; border-radius: 4px; cursor: pointer; margin-left: 8px; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
@@ -67,6 +67,89 @@
             localStorage.setItem('padel_history', JSON.stringify(state.history));
         }
 
+        // --- DYNAMISK OG RETTFERDIG GENERATOR (BASERT PÅ SPILTE KAMPER) ---
+        function getNextFairMatch(players, history, isSingel) {
+            if (players.length < (isSingel ? 2 : 4)) return { t1: ['?'], t2: ['?'] };
+
+            // 1. Tell hvor mange kamper hver enkelt spiller har i historikken
+            let playCounts = {};
+            players.forEach(p => playCounts[p] = 0);
+            history.forEach(m => {
+                [...m.team1, ...m.team2].forEach(p => {
+                    if (playCounts[p] !== undefined) playCounts[p]++;
+                });
+            });
+
+            // 2. Sorter spillere basert på hvem som har spilt FÆRREST kamper
+            let sortedByPlay = [...players].sort((a, b) => playCounts[a] - playCounts[b]);
+
+            if (isSingel) {
+                // Singel: Velg de to som har spilt minst
+                let p1 = sortedByPlay[0];
+                let p2 = sortedByPlay[1];
+                
+                // Sjekk om de har spilt mot hverandre før, prøv å variere hvis mulig
+                if (players.length > 2) {
+                    let minVsCount = Infinity;
+                    let bestOpponent = p2;
+                    for (let i = 1; i < sortedByPlay.length; i++) {
+                        let potentialOpp = sortedByPlay[i];
+                        let vsCount = history.filter(m => 
+                            (m.team1.includes(p1) && m.team2.includes(potentialOpp)) || 
+                            (m.team2.includes(p1) && m.team1.includes(potentialOpp))
+                        ).length;
+                        if (vsCount < minVsCount) {
+                            minVsCount = vsCount;
+                            bestOpponent = potentialOpp;
+                        }
+                    }
+                    p2 = bestOpponent;
+                }
+                return { t1: [p1], t2: [p2] };
+            } else {
+                // Lag (2v2): Hent ut de 4 spillerne som har spilt minst
+                let pool = sortedByPlay.slice(0, 4);
+
+                // Hvis vi har flere spillere med likt antall kamper, rullerer vi basert på rekkefølge
+                if (players.length > 4) {
+                    let tieCount = playCounts[pool[3]];
+                    let allTied = sortedByPlay.filter(p => playCounts[p] === tieCount);
+                    if (allTied.length > 1) {
+                        // Forutsigbar rotasjon basert på antall spilte kamper totalt i historikken
+                        let offset = history.length % players.length;
+                        let shiftedPlayers = [...players].slice(offset).concat([...players].slice(0, offset));
+                        let shiftedSorted = shiftedPlayers.sort((a, b) => playCounts[a] - playCounts[b]);
+                        pool = shiftedSorted.slice(0, 4);
+                    }
+                }
+
+                // Finn den beste makkersammensetningen for disse 4 utvalgte personene
+                // Vi ønsker å unngå at folk som har spilt mye sammen havner på lag igjen med en gang
+                let bestMatch = { t1: [pool[0], pool[1]], t2: [pool[2], pool[3]] };
+                let minPartnerCount = Infinity;
+
+                let combos = [
+                    { t1: [pool[0], pool[1]], t2: [pool[2], pool[3]] },
+                    { t1: [pool[0], pool[2]], t2: [pool[1], pool[3]] },
+                    { t1: [pool[0], pool[3]], t2: [pool[1], pool[2]] }
+                ];
+
+                combos.forEach(c => {
+                    let partnerScore = 0;
+                    history.forEach(m => {
+                        if ((m.team1.includes(c.t1[0]) && m.team1.includes(c.t1[1])) || (m.team2.includes(c.t1[0]) && m.team2.includes(c.t1[1]))) partnerScore++;
+                        if ((m.team1.includes(c.t2[0]) && m.team1.includes(c.t2[1])) || (m.team2.includes(c.t2[0]) && m.team2.includes(c.t2[1]))) partnerScore++;
+                    });
+                    if (partnerScore < minPartnerCount) {
+                        minPartnerCount = partnerScore;
+                        bestMatch = c;
+                    }
+                });
+
+                return bestMatch;
+            }
+        }
+
         function render() {
             const root = document.getElementById('root');
             saveState();
@@ -74,40 +157,7 @@
             const validPlayers = state.playerNames.filter(n => n.trim() !== '');
             const isSingelMode = validPlayers.length < 4;
             
-            // --- GENERERE KAMPOPPSETT ---
-            let allMatches = [];
-            if (validPlayers.length >= 2) {
-                if (isSingelMode) {
-                    // Singel: Alle mot alle (1 vs 1)
-                    for (let i = 0; i < validPlayers.length; i++) {
-                        for (let j = i + 1; j < validPlayers.length; j++) {
-                            allMatches.push({ t1: [validPlayers[i]], t2: [validPlayers[j]] });
-                        }
-                    }
-                } else {
-                    // Lag: Par mot par (2 vs 2)
-                    for (let i = 0; i < validPlayers.length; i++) {
-                        for (let j = i + 1; j < validPlayers.length; j++) {
-                            for (let k = 0; k < validPlayers.length; k++) {
-                                for (let l = k + 1; l < validPlayers.length; l++) {
-                                    if (i !== k && i !== l && j !== k && j !== l) {
-                                        const t1 = [validPlayers[i], validPlayers[j]].sort();
-                                        const t2 = [validPlayers[k], validPlayers[l]].sort();
-                                        if (t1[0] < t2[0]) {
-                                            if(!allMatches.some(m => m.t1[0] === t1[0] && m.t1[1] === t1[1] && m.t2[0] === t2[0])) {
-                                                allMatches.push({ t1, t2 });
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    allMatches.sort((a, b) => (a.t1[0] + a.t2[0]).localeCompare(b.t1[0] + b.t2[0]));
-                }
-            }
-
-            // --- BEREGNE TABELL ---
+            // Beregn tabellstatistikk
             let stats = validPlayers.map(name => ({ name, wins: 0, diff: 0, played: 0 }));
             state.history.forEach(match => {
                 const s1 = parseInt(match.score1) || 0;
@@ -131,13 +181,10 @@
                 stats.sort((a, b) => b.wins - a.wins || b.diff - a.diff);
             }
 
-            // --- FINN NESTE KAMP ---
-            let nextT1 = ['?'], nextT2 = ['?'];
-            if (allMatches.length > 0) {
-                const idx = state.history.length % allMatches.length;
-                nextT1 = allMatches[idx].t1;
-                nextT2 = allMatches[idx].t2;
-            }
+            // Hent NESTE RETTFERDIGE KAMP basert på den nye logikken
+            const nextMatch = getNextFairMatch(validPlayers, state.history, isSingelMode);
+            const nextT1 = nextMatch.t1;
+            const nextT2 = nextMatch.t2;
 
             // --- VIEW: SETUP ---
             if (state.step === 'setup') {
@@ -271,8 +318,7 @@
                     ` : ''}
                 </div>
                 
-                <!-- Knapp nederst for å kjapt kunne gå til setup igjen om man vil legge til spillere midt i -->
-                <div style="max-w: 440px; margin: 0 auto; padding: 0 16px;">
+                <div style="max-width: 440px; margin: 0 auto; padding: 0 16px; text-align: center;">
                      <button onclick="setStep('setup')" class="btn-secondary" style="border: none; background: transparent; color: #64748b; font-size: 11px;">+ Endre spillere / Modus</button>
                 </div>
             `;
@@ -298,7 +344,7 @@
         
         function startTournament() {
             const valid = state.playerNames.filter(n => n.trim() !== '');
-            if(valid.length < 2) return alert("Tast inn minst 2 spillere for singel!");
+            if(valid.length < 2) return alert("Tast inn minst 2 spillere!");
             state.playerNames = valid;
             state.step = 'tournament';
             render();
